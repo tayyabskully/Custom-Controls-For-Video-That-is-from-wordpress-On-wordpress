@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Video</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #e8f0ff;
+  }
+  .video-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #e8f0ff;
+  }
+  .thumbnail-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .thumbnail-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+  }
+  .thumbnail-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #0D193066; /* Overlay color */
+    z-index: 2;
+  }
+  .custom-controls {
+    position: absolute;
+    bottom: 45px;
+    right: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 15000;
+    background-color: #ffff;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+  }
+  .play-btn {
+    font-size: 20px;
+    color: black !important;
+  }
+  div#playBtn {
+    margin-right: -2px;
+  }
+  .play-btn svg path {
+    fill: black;
+  }
+  .pause-btn svg path {
+    fill: black;
+  }
+  .progress-bar {
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    width: 215px;
+    height: 4px;
+    background-color: #d8e5f3;
+    margin: 0;
+    z-index: 10000;
+    border-bottom: 1px solid #18488A;
+  }
+  .progress {
+    height: 100%;
+    background-color: #7493ff;
+    width: 0;
+  }
+  #player {
+    position: relative;
+    top: 0;
+    width: 100%;
+    height: calc(100vh - 10px); /* Just above the progress bar */
+    z-index: 3;
+  }
+  
+  @media only screen and (max-width:767px){
+       .video-container {
+    height: 278px;
+  }
+</style>
+</head>
+<body>
+<div class="video-container">
+  <!-- Thumbnail image -->
+  <div class="thumbnail-wrapper">
+    <img src="https://skykitchenafrica.com/wp-content/uploads/2024/09/Rectangle-4376.png" />
+  </div>
+
+  <div id="player"></div>
+
+  <div class="custom-controls">
+    <div class="play-btn" id="playBtn">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 18 21"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M2.00119 20.5316C1.67167 20.531 1.34799 20.4446 1.06198 20.281C0.41795 19.916 0.0175781 19.2076 0.0175781 18.4385V2.87444C0.0175781 2.10322 0.41795 1.39693 1.06198 1.03198C1.3548 0.863693 1.68745 0.777151 2.02516 0.781399C2.36287 0.785648 2.69323 0.880531 2.98173 1.05613L16.2836 9.01849C16.5609 9.19232 16.7894 9.43371 16.9478 9.72002C17.1062 10.0063 17.1893 10.3282 17.1893 10.6554C17.1893 10.9826 17.1062 11.3045 16.9478 11.5908C16.7894 11.8771 16.5609 12.1185 16.2836 12.2923L2.97958 20.2568C2.68434 20.4353 2.34619 20.5303 2.00119 20.5316Z"
+          fill="white"
+        />
+      </svg>
+    </div>
+    <div class="pause-btn" id="pauseBtn" style="display: none;">&#10074;&#10074;</div>
+  </div>
+  <div class="progress-bar">
+    <div class="progress"></div>
+  </div>
+</div>
+
+<script>
+  const playBtn = document.querySelector(".play-btn");
+  const pauseBtn = document.querySelector(".pause-btn");
+  const progress = document.querySelector(".progress");
+  const thumbnailWrapper = document.querySelector(".thumbnail-wrapper");
+  let player;
+
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player("player", {
+      height: "100%",
+      width: "100%",
+      videoId: "9xwazD5SyVg", // YouTube video ID
+      playerVars: {
+        autoplay: 0,
+        controls: 0,
+        rel: 0,
+        playsinline: 1,
+        enablejsapi: 1,
+        origin: "https://skykitchenafrica.com/",
+        widgetid: 1,
+      },
+      events: {
+        onReady: onPlayerReady,
+        onStateChange: onPlayerStateChange,
+      },
+    });
+  }
+
+  function onPlayerReady(event) {
+    playBtn.addEventListener("click", () => {
+      player.playVideo();
+      playBtn.style.display = "none";
+      pauseBtn.style.display = "block";
+      thumbnailWrapper.style.display = "none"; // Hide the thumbnail when the video plays
+    });
+    pauseBtn.addEventListener("click", () => {
+      player.pauseVideo();
+      pauseBtn.style.display = "none";
+      playBtn.style.display = "block";
+    });
+  }
+
+  function onPlayerStateChange(event) {
+    if (event.data == YT.PlayerState.PLAYING) {
+      setInterval(() => {
+        const currentTime = player.getCurrentTime();
+        const duration = player.getDuration();
+        const progressPercent = (currentTime / duration) * 100;
+        progress.style.width = `${progressPercent}%`;
+      }, 1000);
+    }
+  }
+</script>
+<script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
